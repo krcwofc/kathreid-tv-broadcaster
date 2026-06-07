@@ -6,7 +6,7 @@ let lastMovieKey = null;
 let lastPostTime = 0;
 
 async function fetchTVState() {
-  const res = await fetch("https://YOUR_TV_SITE/data/state.json");
+  const res = await fetch("https://krcwofc.github.io/kathreid-tv/data/state.json");
   return await res.json();
 }
 
