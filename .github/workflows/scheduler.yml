@@ -18,3 +18,5 @@ jobs:
 
       - name: Run scheduler
         run: node cron/scheduler.js
+        env:
+          DISCORD_WEBHOOK_KRBROADC: ${{ secrets.DISCORD_WEBHOOK_KRBROADC }}
