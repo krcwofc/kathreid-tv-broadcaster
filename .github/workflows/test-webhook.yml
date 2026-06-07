@@ -1,0 +1,4 @@
+- name: Test Discord Webhook
+  run: node .github/scripts/test-webhook.js
+  env:
+    DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
