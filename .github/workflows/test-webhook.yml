@@ -1,0 +1,20 @@
+name: Test Discord Webhook
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-webhook:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Test Discord Webhook
+        run: node -e "
+          fetch(process.env.DISCORD_WEBHOOK_URL, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ content: '🧪 TEST MESSAGE — webhook working' })
+          }).then(r => console.log('STATUS:', r.status)).catch(console.error)
+        "
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
