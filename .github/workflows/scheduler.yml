@@ -1,8 +1,6 @@
 name: KathReid TV Scheduler
 
 on:
-  schedule:
-    - cron: "* * * * *"
   workflow_dispatch:
 
 jobs:
