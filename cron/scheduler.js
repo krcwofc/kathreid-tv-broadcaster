@@ -22,7 +22,7 @@ export function startScheduler() {
 
       const state = await fetchTVState();
 
-      const { slot, movieId } = state;
+      const { slot, movieId, movieTitle } = state;
 
       const currentSlotKey = `${slot.start}-${slot.end}`;
       const movieKey = `${currentSlotKey}-${movieId}`;
@@ -39,11 +39,11 @@ export function startScheduler() {
       }
 
       // 🎬 MOVIE CHANGE
-      if (movieId && movieKey !== lastMovieKey) {
+      if (movieId && movieTitle && movieKey !== lastMovieKey) {
         lastMovieKey = movieKey;
 
         await sendDiscordMessage(
-          `🎬 NOW PLAYING\n\n${movieId}\n\n📺 KathReid TV Feature Film`
+          `🎬 NOW PLAYING\n\n${movieTitle}\n\n📺 KathReid TV - Feature Presentation`
         );
 
         lastPostTime = Date.now();
