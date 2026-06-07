@@ -2,8 +2,8 @@ name: KathReid TV Scheduler
 
 on:
   schedule:
-    - cron: "* * * * *"  # every minute
-  workflow_dispatch: # allows manual run button
+    - cron: "* * * * *"
+  workflow_dispatch:
 
 jobs:
   run-scheduler:
@@ -17,9 +17,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Install dependencies
-        run: npm install
 
       - name: Run scheduler
         run: node cron/scheduler.js
