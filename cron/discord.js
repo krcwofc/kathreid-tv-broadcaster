@@ -1,8 +1,8 @@
 export async function sendDiscordMessage(content) {
-  const url = process.env.DISCORD_WEBHOOK_URL;
+  const url = process.env.DISCORD_WEBHOOK_KRBROADC;
 
   if (!url) {
-    console.error("Missing DISCORD_WEBHOOK_URL");
+    console.error("Missing DISCORD_WEBHOOK_KRBROADC");
     return;
   }
 
