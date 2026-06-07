@@ -14,6 +14,95 @@ async function fetchTVState() {
   return await res.json();
 }
 
+/* =========================
+   🧠 PLATFORM FORMATTER
+========================= */
+
+function formatDiscord({ type, title, slotLabel }) {
+  if (type === "slot") {
+    return `📺 KATHREID TV UPDATE
+
+🎞️ Now Entering:
+${slotLabel}
+
+🔴 Live Broadcast Continues 24/7
+
+Watch here:
+${KATHREID_TV_URL}`;
+  }
+
+  if (type === "movie") {
+    return `🎬 NOW PLAYING
+
+${title}
+
+📺 KathReid TV - Feature Presentation
+
+Watch live:
+${KATHREID_TV_URL}`;
+  }
+}
+
+function formatX({ type, title, slotLabel }) {
+  if (type === "slot") {
+    return `📺 KathReid TV Update: Now entering ${slotLabel}
+
+Watch live: ${KATHREID_TV_URL}`;
+  }
+
+  if (type === "movie") {
+    return `🎬 Now Playing: ${title}
+
+📺 KathReid TV - Feature Presentation
+Watch live: ${KATHREID_TV_URL}`;
+  }
+}
+
+function formatThreads({ type, title, slotLabel }) {
+  if (type === "slot") {
+    return `📺 KathReid TV Update
+
+We are now entering:
+${slotLabel}
+
+Enjoy 24/7 curated KathReid programming.
+
+🔴 Watch live: ${KATHREID_TV_URL}`;
+  }
+
+  if (type === "movie") {
+    return `🎬 Now Playing
+
+${title}
+
+📺 KathReid TV - Feature Presentation
+
+Streaming now as part of our 24/7 curated broadcast.
+
+🔴 Watch live: ${KATHREID_TV_URL}`;
+  }
+}
+
+/* =========================
+   📡 BROADCAST SENDER
+   (right now only Discord, ready for expansion)
+========================= */
+
+async function broadcast(type, payload) {
+
+  const discordMsg = formatDiscord({ type, ...payload });
+
+  await sendDiscordMessage(discordMsg);
+
+  // 🔮 future-ready hooks (optional)
+  // await sendToX(formatX({ type, ...payload }));
+  // await sendToThreads(formatThreads({ type, ...payload }));
+}
+
+/* =========================
+   ⏱️ SCHEDULER
+========================= */
+
 export function startScheduler() {
 
   cron.schedule("* * * * *", async () => {
@@ -29,39 +118,24 @@ export function startScheduler() {
       const currentSlotKey = `${slot.start}-${slot.end}`;
       const movieKey = `${currentSlotKey}-${movieId}`;
 
-      // 📺 BLOCK CHANGE
+      /* 📺 SLOT CHANGE */
       if (currentSlotKey !== lastSlotKey) {
         lastSlotKey = currentSlotKey;
 
-        await sendDiscordMessage(
-`📺 KATHREID TV UPDATE
-
-🎞️ Now Entering:
-${slot.label}
-
-🔴 Live Broadcast Continues 24/7
-
-Watch here:
-${KATHREID_TV_URL}`
-        );
+        await broadcast("slot", {
+          slotLabel: slot.label
+        });
 
         lastPostTime = Date.now();
       }
 
-      // 🎬 MOVIE CHANGE
+      /* 🎬 MOVIE CHANGE */
       if (movieId && movieTitle && movieKey !== lastMovieKey) {
         lastMovieKey = movieKey;
 
-        await sendDiscordMessage(
-`🎬 NOW PLAYING
-
-${movieTitle}
-
-📺 KathReid TV - Feature Presentation
-
-Watch live:
-${KATHREID_TV_URL}`
-        );
+        await broadcast("movie", {
+          title: movieTitle
+        });
 
         lastPostTime = Date.now();
       }
