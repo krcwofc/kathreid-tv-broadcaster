@@ -46,9 +46,11 @@ ${title}
 
 📺 KathReid TV - Feature Presentation
 
-Watch live:
+Watch here:
 ${KATHREID_TV_URL}`;
   }
+
+  return ""; // ✅ FIX: prevents undefined payload crashes
 }
 
 /* =========================
@@ -56,8 +58,14 @@ ${KATHREID_TV_URL}`;
 ========================= */
 
 async function broadcast(type, payload) {
-  const discordMsg = formatDiscord({ type, ...payload });
-  await sendDiscordMessage(discordMsg);
+  const msg = formatDiscord({ type, ...payload });
+
+  if (!msg) {
+    console.error("❌ Empty message blocked");
+    return;
+  }
+
+  await sendDiscordMessage(msg);
 }
 
 /* =========================
@@ -80,7 +88,7 @@ async function runScheduler() {
     const { slot, movieId, movieTitle } = state;
 
     /* =========================
-       🧨 SAFETY GUARD (IMPORTANT)
+       🧨 SAFETY GUARD
     ========================= */
 
     if (!slot || typeof slot.start !== "number" || typeof slot.end !== "number") {
@@ -89,7 +97,9 @@ async function runScheduler() {
     }
 
     const currentSlotKey = `${slot.start}-${slot.end}`;
-    const movieKey = `${currentSlotKey}-${movieId || "no-movie"}`;
+
+    // ✅ FIX: stable movieKey even if movieId missing
+    const movieKey = movieId ? `${currentSlotKey}-${movieId}` : null;
 
     /* =========================
        📺 SLOT CHANGE
@@ -106,10 +116,15 @@ async function runScheduler() {
     }
 
     /* =========================
-       🎬 MOVIE CHANGE (ONLY IF MOVIE EXISTS)
+       🎬 MOVIE CHANGE
     ========================= */
 
-    if (movieId && movieTitle && movieKey !== lastMovieKey) {
+    if (
+      movieId &&
+      movieTitle &&
+      movieKey &&
+      movieKey !== lastMovieKey
+    ) {
       lastMovieKey = movieKey;
 
       await broadcast("movie", {
@@ -124,5 +139,5 @@ async function runScheduler() {
   }
 }
 
-/* 🚀 RUN ONCE (GitHub Actions / CJO trigger) */
+/* 🚀 RUN ONCE */
 runScheduler();
