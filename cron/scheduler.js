@@ -6,10 +6,19 @@ let lastSlotKey = null;
 let lastMovieKey = null;
 let lastPostTime = 0;
 
+/* =========================
+   📡 FETCH STATE
+========================= */
+
 async function fetchTVState() {
   const res = await fetch(
     `https://krcwofc.github.io/kathreid-tv/data/state.json?t=${Date.now()}`
   );
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch state.json: ${res.status}`);
+  }
+
   return await res.json();
 }
 
@@ -52,22 +61,40 @@ async function broadcast(type, payload) {
 }
 
 /* =========================
-   🚀 MAIN EXECUTION (GitHub Actions)
+   🚀 MAIN EXECUTION
 ========================= */
 
 async function runScheduler() {
   try {
     const now = Date.now();
-    if (now - lastPostTime < 60000) return;
+
+    if (now - lastPostTime < 60000) {
+      console.log("⏳ Cooldown active, skipping run");
+      return;
+    }
 
     const state = await fetchTVState();
 
+    console.log("📦 STATE RECEIVED:", JSON.stringify(state, null, 2));
+
     const { slot, movieId, movieTitle } = state;
 
-    const currentSlotKey = `${slot.start}-${slot.end}`;
-    const movieKey = `${currentSlotKey}-${movieId}`;
+    /* =========================
+       🧨 SAFETY GUARD (IMPORTANT)
+    ========================= */
 
-    /* 📺 SLOT CHANGE */
+    if (!slot || typeof slot.start !== "number" || typeof slot.end !== "number") {
+      console.error("❌ Invalid slot data:", slot);
+      return;
+    }
+
+    const currentSlotKey = `${slot.start}-${slot.end}`;
+    const movieKey = `${currentSlotKey}-${movieId || "no-movie"}`;
+
+    /* =========================
+       📺 SLOT CHANGE
+    ========================= */
+
     if (currentSlotKey !== lastSlotKey) {
       lastSlotKey = currentSlotKey;
 
@@ -78,7 +105,10 @@ async function runScheduler() {
       lastPostTime = now;
     }
 
-    /* 🎬 MOVIE CHANGE */
+    /* =========================
+       🎬 MOVIE CHANGE (ONLY IF MOVIE EXISTS)
+    ========================= */
+
     if (movieId && movieTitle && movieKey !== lastMovieKey) {
       lastMovieKey = movieKey;
 
@@ -90,9 +120,9 @@ async function runScheduler() {
     }
 
   } catch (err) {
-    console.error("Scheduler error:", err);
+    console.error("❌ Scheduler error:", err);
   }
 }
 
-/* 🚀 RUN ONCE (GitHub Actions trigger) */
+/* 🚀 RUN ONCE (GitHub Actions / CJO trigger) */
 runScheduler();
