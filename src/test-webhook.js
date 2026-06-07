@@ -1,8 +1,8 @@
-const WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
+const WEBHOOK_URL = process.env.DISCORD_WEBHOOK_KRBROADC;
 
 async function test() {
   if (!WEBHOOK_URL) {
-    console.error("❌ Missing DISCORD_WEBHOOK_URL");
+    console.error("❌ Missing DISCORD_WEBHOOK_KRBROADC");
     return;
   }
 
