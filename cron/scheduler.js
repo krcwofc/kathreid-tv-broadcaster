@@ -1,6 +1,8 @@
 import cron from "node-cron";
 import { sendDiscordMessage } from "./discord.js";
 
+const KATHREID_TV_URL = "https://krcwofc.github.io/kathreid-tv/";
+
 let lastSlotKey = null;
 let lastMovieKey = null;
 let lastPostTime = 0;
@@ -32,7 +34,15 @@ export function startScheduler() {
         lastSlotKey = currentSlotKey;
 
         await sendDiscordMessage(
-          `📺 BLOCK CHANGE\n\n${slot.label}\n\n🎬 KathReid TV is now switching programming`
+`📺 KATHREID TV UPDATE
+
+🎞️ Now Entering:
+${slot.label}
+
+🔴 Live Broadcast Continues 24/7
+
+Watch here:
+${KATHREID_TV_URL}`
         );
 
         lastPostTime = Date.now();
@@ -43,7 +53,14 @@ export function startScheduler() {
         lastMovieKey = movieKey;
 
         await sendDiscordMessage(
-          `🎬 NOW PLAYING\n\n${movieTitle}\n\n📺 KathReid TV - Feature Presentation`
+`🎬 NOW PLAYING
+
+${movieTitle}
+
+📺 KathReid TV - Feature Presentation
+
+Watch live:
+${KATHREID_TV_URL}`
         );
 
         lastPostTime = Date.now();
