@@ -1,1 +1,5 @@
+let lastSlotKey = null;
+let lastMovieKey = null;
+let lastPostTime = 0;
 
+cron.schedule("* * * * *", async () => { ... })
