@@ -74,12 +74,6 @@ async function broadcast(type, payload) {
 
 async function runScheduler() {
   try {
-    const now = Date.now();
-
-    if (now - lastPostTime < 60000) {
-      console.log("⏳ Cooldown active, skipping run");
-      return;
-    }
 
     const state = await fetchTVState();
 
@@ -87,6 +81,41 @@ async function runScheduler() {
 
     const { slot, movieId, movieTitle } = state;
 
+    if (!slot || typeof slot.start !== "number" || typeof slot.end !== "number") {
+      console.error("❌ Invalid slot data:", slot);
+      return;
+    }
+
+    const currentSlotKey = `${slot.start}-${slot.end}`;
+    const movieKey = movieId ? `${currentSlotKey}-${movieId}` : null;
+
+    // SLOT CHANGE
+    if (currentSlotKey !== lastSlotKey) {
+      lastSlotKey = currentSlotKey;
+
+      await broadcast("slot", {
+        slotLabel: slot.label
+      });
+    }
+
+    // MOVIE CHANGE
+    if (
+      movieId &&
+      movieTitle &&
+      movieKey &&
+      movieKey !== lastMovieKey
+    ) {
+      lastMovieKey = movieKey;
+
+      await broadcast("movie", {
+        title: movieTitle
+      });
+    }
+
+  } catch (err) {
+    console.error("❌ Scheduler error:", err);
+  }
+}
     /* =========================
        🧨 SAFETY GUARD
     ========================= */
