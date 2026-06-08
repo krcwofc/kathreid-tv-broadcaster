@@ -1,17 +1,5 @@
 import { sendDiscordMessage } from "./discord.js";
 
-const KATHREID_TV_URL = "https://krcwofc.github.io/kathreid-tv/";
-
-let lastSlotKey = null;
-let lastMovieKey = null;
-let lastPostTime = 0;
-
-/* =========================
-   📡 FETCH STATE
-========================= */
-
-import { sendDiscordMessage } from "./discord.js";
-
 const KATHREID_TV_URL =
   "https://krcwofc.github.io/kathreid-tv/";
 
@@ -67,7 +55,7 @@ ${KATHREID_TV_URL}`;
 }
 
 /* =========================
-   📡 SEND TO DISCORD
+   📡 BROADCAST TO DISCORD
 ========================= */
 
 async function broadcast(type, payload) {
@@ -86,7 +74,7 @@ async function runScheduler() {
   try {
     const now = Date.now();
 
-    // simple anti-spam throttle (1 per run cycle protection)
+    // anti-spam throttle (prevents duplicate Discord posts)
     if (now - lastPostTime < 15000) return;
 
     const state = await fetchTVState();
@@ -102,7 +90,7 @@ async function runScheduler() {
     const movieKey = movieId ? `${currentSlotKey}-${movieId}` : null;
 
     /* =========================
-       📺 SLOT CHANGE ONLY
+       📺 SLOT CHANGE
     ========================= */
 
     if (currentSlotKey !== lastSlotKey) {
@@ -116,7 +104,7 @@ async function runScheduler() {
     }
 
     /* =========================
-       🎬 MOVIE CHANGE ONLY
+       🎬 MOVIE CHANGE
     ========================= */
 
     if (
