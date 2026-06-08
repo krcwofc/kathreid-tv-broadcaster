@@ -1,11 +1,30 @@
+import fs from "fs";
 import { sendDiscordMessage } from "./discord.js";
 
 const KATHREID_TV_URL =
   "https://krcwofc.github.io/kathreid-tv/";
 
-let lastSlotKey = null;
-let lastMovieKey = null;
-let lastPostTime = 0;
+const MEMORY_FILE = "./data/scheduler-memory.json";
+
+/* =========================
+   🧠 MEMORY LOAD/SAVE
+========================= */
+
+function loadMemory() {
+  try {
+    return JSON.parse(fs.readFileSync(MEMORY_FILE, "utf8"));
+  } catch {
+    return {
+      lastSlotKey: null,
+      lastMovieKey: null
+    };
+  }
+}
+
+function saveMemory(memory) {
+  fs.mkdirSync("./data", { recursive: true });
+  fs.writeFileSync(MEMORY_FILE, JSON.stringify(memory, null, 2));
+}
 
 /* =========================
    📡 FETCH STATE
@@ -24,7 +43,7 @@ async function fetchTVState() {
 }
 
 /* =========================
-   🧠 FORMAT DISCORD MESSAGE
+   🧠 FORMAT MESSAGE
 ========================= */
 
 function formatDiscord({ type, title, slotLabel }) {
@@ -55,7 +74,7 @@ ${KATHREID_TV_URL}`;
 }
 
 /* =========================
-   📡 BROADCAST TO DISCORD
+   📡 DISCORD SEND
 ========================= */
 
 async function broadcast(type, payload) {
@@ -72,10 +91,7 @@ async function broadcast(type, payload) {
 
 async function runScheduler() {
   try {
-    const now = Date.now();
-
-    // anti-spam throttle (prevents duplicate Discord posts)
-    if (now - lastPostTime < 15000) return;
+    const memory = loadMemory();
 
     const state = await fetchTVState();
 
@@ -93,14 +109,12 @@ async function runScheduler() {
        📺 SLOT CHANGE
     ========================= */
 
-    if (currentSlotKey !== lastSlotKey) {
-      lastSlotKey = currentSlotKey;
+    if (currentSlotKey !== memory.lastSlotKey) {
+      memory.lastSlotKey = currentSlotKey;
 
       await broadcast("slot", {
         slotLabel: slot.label
       });
-
-      lastPostTime = now;
     }
 
     /* =========================
@@ -111,16 +125,20 @@ async function runScheduler() {
       movieId &&
       movieTitle &&
       movieKey &&
-      movieKey !== lastMovieKey
+      movieKey !== memory.lastMovieKey
     ) {
-      lastMovieKey = movieKey;
+      memory.lastMovieKey = movieKey;
 
       await broadcast("movie", {
         title: movieTitle
       });
-
-      lastPostTime = now;
     }
+
+    /* =========================
+       💾 SAVE MEMORY (IMPORTANT)
+    ========================= */
+
+    saveMemory(memory);
   } catch (err) {
     console.error("❌ Scheduler error:", err);
   }
