@@ -10,6 +10,19 @@ let lastPostTime = 0;
    📡 FETCH STATE
 ========================= */
 
+import { sendDiscordMessage } from "./discord.js";
+
+const KATHREID_TV_URL =
+  "https://krcwofc.github.io/kathreid-tv/";
+
+let lastSlotKey = null;
+let lastMovieKey = null;
+let lastPostTime = 0;
+
+/* =========================
+   📡 FETCH STATE
+========================= */
+
 async function fetchTVState() {
   const res = await fetch(
     `https://krcwofc.github.io/kathreid-tv/data/state.json?t=${Date.now()}`
@@ -23,7 +36,7 @@ async function fetchTVState() {
 }
 
 /* =========================
-   🧠 PLATFORM FORMATTER
+   🧠 FORMAT DISCORD MESSAGE
 ========================= */
 
 function formatDiscord({ type, title, slotLabel }) {
@@ -50,34 +63,33 @@ Watch here:
 ${KATHREID_TV_URL}`;
   }
 
-  return ""; // ✅ FIX: prevents undefined payload crashes
+  return "";
 }
 
 /* =========================
-   📡 BROADCAST SENDER
+   📡 SEND TO DISCORD
 ========================= */
 
 async function broadcast(type, payload) {
   const msg = formatDiscord({ type, ...payload });
 
-  if (!msg) {
-    console.error("❌ Empty message blocked");
-    return;
-  }
+  if (!msg) return;
 
   await sendDiscordMessage(msg);
 }
 
 /* =========================
-   🚀 MAIN EXECUTION
+   🚀 MAIN SCHEDULER
 ========================= */
 
 async function runScheduler() {
   try {
+    const now = Date.now();
+
+    // simple anti-spam throttle (1 per run cycle protection)
+    if (now - lastPostTime < 15000) return;
 
     const state = await fetchTVState();
-
-    console.log("📦 STATE RECEIVED:", JSON.stringify(state, null, 2));
 
     const { slot, movieId, movieTitle } = state;
 
@@ -89,49 +101,8 @@ async function runScheduler() {
     const currentSlotKey = `${slot.start}-${slot.end}`;
     const movieKey = movieId ? `${currentSlotKey}-${movieId}` : null;
 
-    // SLOT CHANGE
-    if (currentSlotKey !== lastSlotKey) {
-      lastSlotKey = currentSlotKey;
-
-      await broadcast("slot", {
-        slotLabel: slot.label
-      });
-    }
-
-    // MOVIE CHANGE
-    if (
-      movieId &&
-      movieTitle &&
-      movieKey &&
-      movieKey !== lastMovieKey
-    ) {
-      lastMovieKey = movieKey;
-
-      await broadcast("movie", {
-        title: movieTitle
-      });
-    }
-
-  } catch (err) {
-    console.error("❌ Scheduler error:", err);
-  }
-}
     /* =========================
-       🧨 SAFETY GUARD
-    ========================= */
-
-    if (!slot || typeof slot.start !== "number" || typeof slot.end !== "number") {
-      console.error("❌ Invalid slot data:", slot);
-      return;
-    }
-
-    const currentSlotKey = `${slot.start}-${slot.end}`;
-
-    // ✅ FIX: stable movieKey even if movieId missing
-    const movieKey = movieId ? `${currentSlotKey}-${movieId}` : null;
-
-    /* =========================
-       📺 SLOT CHANGE
+       📺 SLOT CHANGE ONLY
     ========================= */
 
     if (currentSlotKey !== lastSlotKey) {
@@ -145,7 +116,7 @@ async function runScheduler() {
     }
 
     /* =========================
-       🎬 MOVIE CHANGE
+       🎬 MOVIE CHANGE ONLY
     ========================= */
 
     if (
@@ -162,11 +133,13 @@ async function runScheduler() {
 
       lastPostTime = now;
     }
-
   } catch (err) {
     console.error("❌ Scheduler error:", err);
   }
 }
 
-/* 🚀 RUN ONCE */
+/* =========================
+   ▶ RUN
+========================= */
+
 runScheduler();
