@@ -22,3 +22,11 @@ jobs:
         run: node cron/scheduler.js
         env:
           DISCORD_WEBHOOK_KRBROADC: ${{ secrets.DISCORD_WEBHOOK_KRBROADC }}
+
+      - name: Commit memory state
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add data/scheduler-memory.json
+          git commit -m "update scheduler memory" || exit 0
+          git push
