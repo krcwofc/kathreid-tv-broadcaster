@@ -2,7 +2,7 @@ import fs from "fs";
 import { sendDiscordMessage } from "./discord.js";
 
 const KATHREID_TV_URL =
-  "https://krcwofc.github.io/kathreid-tv/";
+  "https://krcwofc.github.io/kathreid-tv/launch.html";
 
 const MEMORY_FILE = "./data/scheduler-memory.json";
 
